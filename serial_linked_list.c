@@ -43,13 +43,15 @@ int Insert(int value, struct linked_list_node **list_head)
             *list_head = temp_pointer;
         }
         else
+        {
             predece_pointer->next_node = temp_pointer;
+        }
+        return 1;
     }
     else
     {
-        printf("Can not insert the same value, " + value);
+        return 0;
     }
-    return 0;
 }
 
 int Delete(int value, struct linked_list_node **list_head)
@@ -77,9 +79,10 @@ int Delete(int value, struct linked_list_node **list_head)
             free(current_pointer);
         }
     }
+    return 0;
+}
 
-    else
-    {
-        printf("Value not found " + value);
-    }
+int Member(int value, struct linked_list_node **list_head)
+{
+    
 }
