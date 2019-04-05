@@ -18,7 +18,7 @@ int Insert(int value, struct linked_list_node **list_head);
 
 int Delete(int value, struct linked_list_node **list_head);
 
-int Member(int value, struct linked_list_node **list_head);
+int Member(int value, struct linked_list_node *list_head);
 
 int Insert(int value, struct linked_list_node **list_head)
 {
@@ -59,7 +59,7 @@ int Delete(int value, struct linked_list_node **list_head)
     struct linked_list_node *current_pointer = *list_head;
     struct linked_list_node *predece_pointer = NULL;
 
-    while (current_pointer != NULL || current_pointer->value < value)
+    while (current_pointer != NULL && current_pointer->value < value)
     {
         predece_pointer = current_pointer;
         current_pointer = current_pointer->next_node;
@@ -82,7 +82,18 @@ int Delete(int value, struct linked_list_node **list_head)
     return 0;
 }
 
-int Member(int value, struct linked_list_node **list_head)
+int Member(int value, struct linked_list_node *list_head)
 {
-    
+    struct linked_list_node *current_pointer = list_head;
+
+    while (current_pointer != NULL && current_pointer->value < value)
+    {
+        current_pointer = current_pointer->next_node;
+
+        if (current_pointer->value == value)
+        {
+            return 1;
+        }
+    }
+    return 0;
 }
