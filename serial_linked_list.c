@@ -112,7 +112,63 @@ void getInputs(int argc, char *argv[])
     member_percentage = (float)atof(argv[5]);
 }
 
-double CalculateTime(struct timeval time_begin, struct timeval time_end) {
-    return (double) (time_end.tv_usec - time_begin.tv_usec) / 1000000 + (double) (time_end.tv_sec - time_begin.tv_sec);
+double CalculateTime(struct timeval time_begin, struct timeval time_end)
+{
+    return (double)(time_end.tv_usec - time_begin.tv_usec) / 1000000 + (double)(time_end.tv_sec - time_begin.tv_sec);
 }
 
+int main(int argc, char *argv[])
+{
+    struct linked_list_node *head = NULL;
+    struct timeval time_begin, time_end;
+
+    getInputs(argc, argv);
+
+    int i = 0;
+    while (i < n)
+    {
+        i = i + Insert(rand() % MAX_RANDOM, &head) == 1;
+    }
+
+    int count_tot = 0;
+    int count_member = 0;
+    int count_insert = 0;
+    int count_delete = 0;
+
+    float m_insert = inset_percentage * m;
+    float m_delete = delete_percentage * m;
+    float m_member = member_percentage * m;
+
+    gettimeofday(&time_begin, NULL);
+
+    while (count_tot < m)
+    {
+        int random_value = rand() % MAX_RANDOM;
+        int operation_selection = rand() % 3;
+
+        if (operation_selection == 0 && count_member < m_member)
+        {
+            Member(random_value, head);
+            count_member++;
+        }
+
+        if (operation_selection == 1 && count_insert < m_insert)
+        {
+            Insert(random_value, &head);
+            count_insert++;
+        }
+
+        else if (operation_selection == 2 && count_delete < m_delete)
+        {
+            Delete(random_value, &head);
+            count_delete++;
+        }
+
+        count_tot = count_insert + count_member + count_delete;
+    }
+    gettimeofday(&time_end, NULL);
+
+    printf("Serial Linked List Time Spent : %.6f secs\n", CalculateTime(time_begin, time_end));
+
+    return 0;
+}
