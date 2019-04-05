@@ -20,6 +20,10 @@ int Delete(int value, struct linked_list_node **list_head);
 
 int Member(int value, struct linked_list_node *list_head);
 
+void getInputs(int argc, char *argv[]);
+
+double CalculateTime(struct timeval time_begin, struct timeval time_end);
+
 int Insert(int value, struct linked_list_node **list_head)
 {
     struct linked_list_node *current_pointer = *list_head;
@@ -97,3 +101,18 @@ int Member(int value, struct linked_list_node *list_head)
     }
     return 0;
 }
+
+void getInputs(int argc, char *argv[])
+{
+    n = (int)strtol(argv[1], (char **)NULL, 10);
+    m = (int)strtol(argv[2], (char **)NULL, 10);
+
+    inset_percentage = (float)atof(argv[3]);
+    delete_percentage = (float)atof(argv[4]);
+    member_percentage = (float)atof(argv[5]);
+}
+
+double CalculateTime(struct timeval time_begin, struct timeval time_end) {
+    return (double) (time_end.tv_usec - time_begin.tv_usec) / 1000000 + (double) (time_end.tv_sec - time_begin.tv_sec);
+}
+
