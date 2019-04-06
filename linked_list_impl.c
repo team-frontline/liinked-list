@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <sys/time.h>
 #include <pthread.h>
+#include <math.h>
 
 #define MAX_THREADS 1024
 #define MAX_RANDOM 65535
@@ -50,9 +51,12 @@ int main(int argc, char *argv[])
    thread_count = (int)strtol(argv[3], (char **)NULL, 10);
 
    // Setting the input values of operation fraction values
-   m_member_frac = (float) atof(argv[4]);;
-   m_insert_frac = (float) atof(argv[5]);;
-   m_delete_frac = (float) atof(argv[6]);;
+   m_member_frac = (float)atof(argv[4]);
+   ;
+   m_insert_frac = (float)atof(argv[5]);
+   ;
+   m_delete_frac = (float)atof(argv[6]);
+   ;
 
    // Calculating the total number od each operation
    m_insert = m_insert_frac * m;
@@ -82,7 +86,7 @@ int main(int argc, char *argv[])
    struct timeval time_begin, time_end;
 
    gen_linked_list();
-   print_linked_list(first_node);
+   // print_linked_list(first_node);
 
    // Initializing the mutex
    pthread_mutex_init(&mutex, NULL);
@@ -114,7 +118,7 @@ int main(int argc, char *argv[])
    // Destroying the mutex
    pthread_mutex_destroy(&mutex);
 
-   print_linked_list(first_node);
+   // print_linked_list(first_node);
    printf("\nLinked List with a single mutex Time Spent : %.6f secs\n", calc_time(time_begin, time_end));
    return 0;
 }
@@ -236,15 +240,8 @@ void *thread_ops()
 {
    while (count_delete_op + count_insert_op + count_member_op < m)
    {
-      printf("  -thread vls:(%d,%d,%d) of (%f,%f,%f)",
-             count_delete_op, count_insert_op, count_member_op, m_delete, m_insert, m_member);
-
       int value = rand() % MAX_RANDOM;
-      int rn = rand();
-      int random_op_no = rn % 3;
-      // int random_op_no = 2;
-
-      printf("  %d,%d,%d\n", value, random_op_no, rn);
+      int random_op_no = rand() % 3;
       switch (random_op_no)
       {
       case 0:
@@ -282,5 +279,9 @@ void *thread_ops()
       default:
          break;
       }
+   /*
+      printf("  -thread vls:(%d/%.1f,%d/%.1f,%d/%.1f) \n",
+             count_member_op, m_member, count_insert_op, m_insert, count_delete_op, m_delete);
+   */
    }
 }
