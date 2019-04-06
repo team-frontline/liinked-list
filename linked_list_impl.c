@@ -50,9 +50,9 @@ int main(int argc, char *argv[])
    thread_count = (int)strtol(argv[3], (char **)NULL, 10);
 
    // Setting the input values of operation fraction values
-   m_member_frac = 0.2;
-   m_insert_frac = 0.4;
-   m_delete_frac = 0.4;
+   m_member_frac = (float) atof(argv[4]);;
+   m_insert_frac = (float) atof(argv[5]);;
+   m_delete_frac = (float) atof(argv[6]);;
 
    // Calculating the total number od each operation
    m_insert = m_insert_frac * m;
@@ -105,11 +105,8 @@ int main(int argc, char *argv[])
    while (j < thread_count)
    {
       pthread_join(thread_handlers[j], NULL);
-      printf("%d\n", j);
       j++;
    }
-
-   printf("Done joining threads\n");
 
    // Getting the end time stamp
    gettimeofday(&time_end, NULL);
@@ -117,7 +114,8 @@ int main(int argc, char *argv[])
    // Destroying the mutex
    pthread_mutex_destroy(&mutex);
 
-   printf("Linked List with a single mutex Time Spent : %.6f secs\n", calc_time(time_begin, time_end));
+   print_linked_list(first_node);
+   printf("\nLinked List with a single mutex Time Spent : %.6f secs\n", calc_time(time_begin, time_end));
    return 0;
 }
 
@@ -130,7 +128,7 @@ int Member(int value, struct node *first_node_p)
    {
       current_node = current_node->next_node;
    }
-   if (current_node->val = value)
+   if (current_node->val == value)
    {
       return 1;
    }
@@ -211,13 +209,15 @@ void gen_linked_list()
 //print linked_list
 void print_linked_list(struct node *first_node_p)
 {
+   printf("----\n\n");
    struct node *current_node = first_node_p;
 
    while (current_node != NULL)
    {
-      printf("%d\n",current_node->val);
-      current_node = current_node->next_node;      
+      printf(" %d,", current_node->val);
+      current_node = current_node->next_node;
    }
+   printf("\n");
 }
 
 // Calculating time
@@ -241,47 +241,41 @@ void *thread_ops()
 
       int value = rand() % MAX_RANDOM;
       int rn = rand();
-      // int random_op_no = rn % 3;
-      int random_op_no = 1;
+      int random_op_no = rn % 3;
+      // int random_op_no = 2;
 
       printf("  %d,%d,%d\n", value, random_op_no, rn);
       switch (random_op_no)
       {
       case 0:
-         printf("Memeber");
          /* Member Operation*/
          if (count_member_op < m_member)
          {
-            printf("- Member");
             pthread_mutex_lock(&mutex);
             Member(value, first_node);
             count_member_op++;
-            pthread_mutex_destroy(&mutex);
+            pthread_mutex_unlock(&mutex);
          }
          break;
 
       case 1:
-         printf("Insert: ");
          /* Insert Operation */
          if (count_insert_op < m_insert)
          {
             pthread_mutex_lock(&mutex);
             Insert(value, &first_node);
             count_insert_op++;
-            pthread_mutex_destroy(&mutex);
+            pthread_mutex_unlock(&mutex);
          }
          break;
 
       case 2:
-         printf("Delete");
-         /* Delete Operation */
          if (count_delete_op < m_delete)
          {
-            printf("- Delete");
             pthread_mutex_lock(&mutex);
             Delete(value, &first_node);
             count_delete_op++;
-            pthread_mutex_destroy(&mutex);
+            pthread_mutex_unlock(&mutex);
          }
          break;
 
