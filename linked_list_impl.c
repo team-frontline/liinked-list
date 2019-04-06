@@ -74,6 +74,11 @@ int main(int argc, char *argv[])
    // Getting the begin time stamp
    gettimeofday(&time_begin, NULL);
 
+   /*
+   *  Thread Creation
+   *  Thread Join
+   */
+
    // Getting the end time stamp
    gettimeofday(&time_end, NULL);
 
@@ -101,6 +106,38 @@ int Member(int value, struct node *first_node)
    return 0;
 }
 
+//Insert a value to the linked-list
+int Insert(int value, struct node **head_pp)
+{
+   struct node *current_node = head_pp;
+   struct node *prev_node = NULL;
+   struct node *temp_node = NULL;
+
+   while (current_node != NULL && current_node->val < value)
+   {
+      prev_node = current_node;
+      current_node = current_node->next_node;
+   }
+   if (current_node == NULL || current_node->val > value)
+   {
+      temp_node = malloc(sizeof(struct node));
+      temp_node->val = value;
+      temp_node->next_node = current_node;
+
+      if (prev_node != NULL)
+      {
+         prev_node->next_node = temp_node;
+      }
+      else
+      {
+         *head_pp = temp_node;
+      }
+      return 1;
+   }
+   return 0;
+}
+
+//Generate the linked-list
 void gen_linked_list()
 {
    // Linked List Generation with Random values
