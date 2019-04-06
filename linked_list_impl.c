@@ -5,6 +5,7 @@
 
 #define MAX_THREADS 1024
 #define MAX_RANDOM 65535
+#define NO_OF_OPS 3
 
 int n = 0;
 int m = 0;
@@ -14,6 +15,9 @@ float m_insert_frac = 0.0, m_delete_frac = 0.0, m_member_frac = 0.0;
 // Total number of each operation
 float m_insert = 0.0, m_delete = 0.0, m_member = 0.0;
 
+//declare counts
+int count_member_op, count_insert_op, count_delete_op;
+
 struct node *first_node;
 
 struct node
@@ -22,15 +26,19 @@ struct node
    struct node *next_node;
 };
 
+pthread_mutex_t mutex;
+
 void gen_linked_list();
 
-int Insert(int value, struct node **head_pp);
+int Insert(int value, struct node **first_node_pp);
 
-int Delete(int value, struct node **head_pp);
+int Delete(int value, struct node **first_node_pp);
 
-int Member(int value, struct node *first_node);
+int Member(int value, struct node *first_node_p);
 
 double calc_time(struct timeval time_begin, struct timeval time_end);
+
+void *thread_ops();
 
 int main(int argc, char *argv[])
 {
@@ -49,6 +57,9 @@ int main(int argc, char *argv[])
    m_delete = m_delete_frac * m;
    m_member = m_member_frac * m;
 
+   //Counts init
+   count_member_op = 0, count_insert_op = 0, count_delete_op = 0;
+
    //TODO: Validate Arguments
 
    //validate args
@@ -59,9 +70,7 @@ int main(int argc, char *argv[])
    }
 
    //Test
-   printf("%d %d %d\n", n, m, thread_count);
-
-   pthread_mutex_t mutex;
+   printf("n=%d, m=%d thread_count=%d \n", n, m, thread_count);
 
    //Thread handlers initiating
    pthread_t *thread_handlers;
@@ -80,6 +89,23 @@ int main(int argc, char *argv[])
    *  Thread Creation
    *  Thread Join
    */
+   int i = 0;
+   while (i < thread_count)
+   {
+      pthread_create(&thread_handlers[i], NULL, (void *)thread_ops, NULL);
+      i++;
+   }
+
+   printf("Done creating threads");
+
+   int j = 0;
+   while (j < thread_count)
+   {
+      pthread_join(thread_handlers[j], NULL);
+      j++;
+   }
+
+   printf("Done joining threads");
 
    // Getting the end time stamp
    gettimeofday(&time_end, NULL);
@@ -92,9 +118,9 @@ int main(int argc, char *argv[])
 }
 
 //Check whether a given value is a member or not
-int Member(int value, struct node *first_node)
+int Member(int value, struct node *first_node_p)
 {
-   struct node *current_node = first_node;
+   struct node *current_node = first_node_p;
 
    while (current_node != NULL && current_node->val < value)
    {
@@ -109,9 +135,9 @@ int Member(int value, struct node *first_node)
 }
 
 //Insert a value to the linked-list
-int Insert(int value, struct node **head_pp)
+int Insert(int value, struct node **first_node_pp)
 {
-   struct node *current_node = *head_pp;
+   struct node *current_node = *first_node_pp;
    struct node *prev_node = NULL;
    struct node *temp_node = NULL;
 
@@ -132,7 +158,7 @@ int Insert(int value, struct node **head_pp)
       }
       else
       {
-         *head_pp = temp_node;
+         *first_node_pp = temp_node;
       }
       return 1;
    }
@@ -140,9 +166,9 @@ int Insert(int value, struct node **head_pp)
 }
 
 //Delete a node in the linkedlist
-int Delete(int value, struct node **head_pp)
+int Delete(int value, struct node **first_node_pp)
 {
-   struct node *current_node = *head_pp;
+   struct node *current_node = *first_node_pp;
    struct node *prev_node = NULL;
 
    while (current_node != NULL && current_node->val < value)
@@ -158,7 +184,7 @@ int Delete(int value, struct node **head_pp)
       }
       else
       {
-         *head_pp = current_node->next_node;
+         *first_node_pp = current_node->next_node;
       }
       free(current_node);
       return 1;
@@ -182,4 +208,53 @@ void gen_linked_list()
 double calc_time(struct timeval time_begin, struct timeval time_end)
 {
    return (double)(time_end.tv_usec - time_begin.tv_usec) / 1000000 + (double)(time_end.tv_sec - time_begin.tv_sec);
+}
+
+// Thread Operations
+void *thread_ops()
+{
+   while (count_delete_op + count_insert_op + count_member_op < m)
+   {
+      int value = rand() % MAX_RANDOM;
+      int random_op_no = rand() % 3;
+
+      switch (random_op_no)
+      {
+      case 0:
+         /* Member Operation*/
+         if (count_member_op < m_member)
+         {
+            pthread_mutex_lock(&mutex);
+            Member(value, first_node);
+            count_member_op++;
+            pthread_mutex_destroy(&mutex);
+         }
+         break;
+
+      case 1:
+         /* Insert Operation */
+         if (count_insert_op < m_insert)
+         {
+            pthread_mutex_lock(&mutex);
+            Insert(value, &first_node);
+            count_insert_op++;
+            pthread_mutex_destroy(&mutex);
+         }
+         break;
+
+      case 2:
+         /* Delete Operation */
+         if (count_delete_op < m_delete)
+         {
+            pthread_mutex_lock(&mutex);
+            Delete(value, &first_node);
+            count_delete_op++;
+            pthread_mutex_destroy(&mutex);
+         }
+         break;
+
+      default:
+         break;
+      }
+   }
 }
