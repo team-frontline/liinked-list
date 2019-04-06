@@ -137,6 +137,33 @@ int Insert(int value, struct node **head_pp)
    return 0;
 }
 
+//Delete a node in the linkedlist
+int Delete(int value, struct node **head_pp)
+{
+   struct node *current_node = head_pp;
+   struct node *prev_node = NULL;
+
+   while (current_node != NULL && current_node->val < value)
+   {
+      prev_node = current_node;
+      current_node = current_node->next_node;
+   }
+   if (current_node->val == value)
+   {
+      if (prev_node != NULL)
+      {
+         prev_node->next_node = current_node->next_node;
+      }
+      else
+      {
+         *head_pp = current_node->next_node;
+      }
+      free(current_node);
+      return 1;
+   }
+   return 0;
+}
+
 //Generate the linked-list
 void gen_linked_list()
 {
@@ -147,4 +174,10 @@ void gen_linked_list()
       if (Insert(rand() % 65535, &first_node) == 1)
          i++;
    }
+}
+
+// Calculating time
+double CalcTime(struct timeval time_begin, struct timeval time_end)
+{
+   return (double)(time_end.tv_usec - time_begin.tv_usec) / 1000000 + (double)(time_end.tv_sec - time_begin.tv_sec);
 }
