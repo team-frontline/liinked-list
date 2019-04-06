@@ -30,6 +30,8 @@ int Delete(int value, struct node **head_pp);
 
 int Member(int value, struct node *first_node);
 
+double calc_time(struct timeval time_begin, struct timeval time_end);
+
 int main(int argc, char *argv[])
 {
    //Setting input values
@@ -85,7 +87,7 @@ int main(int argc, char *argv[])
    // Destroying the mutex
    pthread_mutex_destroy(&mutex);
 
-   printf("Linked List with a single mutex Time Spent : %.6f secs\n", CalcTime(time_begin, time_end));
+   printf("Linked List with a single mutex Time Spent : %.6f secs\n", calc_time(time_begin, time_end));
    return 0;
 }
 
@@ -109,7 +111,7 @@ int Member(int value, struct node *first_node)
 //Insert a value to the linked-list
 int Insert(int value, struct node **head_pp)
 {
-   struct node *current_node = head_pp;
+   struct node *current_node = *head_pp;
    struct node *prev_node = NULL;
    struct node *temp_node = NULL;
 
@@ -140,7 +142,7 @@ int Insert(int value, struct node **head_pp)
 //Delete a node in the linkedlist
 int Delete(int value, struct node **head_pp)
 {
-   struct node *current_node = head_pp;
+   struct node *current_node = *head_pp;
    struct node *prev_node = NULL;
 
    while (current_node != NULL && current_node->val < value)
@@ -177,7 +179,7 @@ void gen_linked_list()
 }
 
 // Calculating time
-double CalcTime(struct timeval time_begin, struct timeval time_end)
+double calc_time(struct timeval time_begin, struct timeval time_end)
 {
    return (double)(time_end.tv_usec - time_begin.tv_usec) / 1000000 + (double)(time_end.tv_sec - time_begin.tv_sec);
 }
