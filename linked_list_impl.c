@@ -30,6 +30,8 @@ pthread_mutex_t mutex;
 
 void gen_linked_list();
 
+void print_linked_list(struct node *first_node_p);
+
 int Insert(int value, struct node **first_node_pp);
 
 int Delete(int value, struct node **first_node_pp);
@@ -79,6 +81,9 @@ int main(int argc, char *argv[])
    // time variables
    struct timeval time_begin, time_end;
 
+   gen_linked_list();
+   print_linked_list(first_node);
+
    // Initializing the mutex
    pthread_mutex_init(&mutex, NULL);
 
@@ -96,16 +101,15 @@ int main(int argc, char *argv[])
       i++;
    }
 
-   printf("Done creating threads");
-
    int j = 0;
    while (j < thread_count)
    {
       pthread_join(thread_handlers[j], NULL);
+      printf("%d\n", j);
       j++;
    }
 
-   printf("Done joining threads");
+   printf("Done joining threads\n");
 
    // Getting the end time stamp
    gettimeofday(&time_end, NULL);
@@ -204,10 +208,27 @@ void gen_linked_list()
    }
 }
 
+//print linked_list
+void print_linked_list(struct node *first_node_p)
+{
+   struct node *current_node = first_node_p;
+
+   while (current_node != NULL)
+   {
+      printf("%d\n",current_node->val);
+      current_node = current_node->next_node;      
+   }
+}
+
 // Calculating time
 double calc_time(struct timeval time_begin, struct timeval time_end)
 {
    return (double)(time_end.tv_usec - time_begin.tv_usec) / 1000000 + (double)(time_end.tv_sec - time_begin.tv_sec);
+}
+
+void *thread_op(int id)
+{
+   printf("  -thread running..\n");
 }
 
 // Thread Operations
@@ -215,15 +236,23 @@ void *thread_ops()
 {
    while (count_delete_op + count_insert_op + count_member_op < m)
    {
-      int value = rand() % MAX_RANDOM;
-      int random_op_no = rand() % 3;
+      printf("  -thread vls:(%d,%d,%d) of (%f,%f,%f)",
+             count_delete_op, count_insert_op, count_member_op, m_delete, m_insert, m_member);
 
+      int value = rand() % MAX_RANDOM;
+      int rn = rand();
+      // int random_op_no = rn % 3;
+      int random_op_no = 1;
+
+      printf("  %d,%d,%d\n", value, random_op_no, rn);
       switch (random_op_no)
       {
       case 0:
+         printf("Memeber");
          /* Member Operation*/
          if (count_member_op < m_member)
          {
+            printf("- Member");
             pthread_mutex_lock(&mutex);
             Member(value, first_node);
             count_member_op++;
@@ -232,6 +261,7 @@ void *thread_ops()
          break;
 
       case 1:
+         printf("Insert: ");
          /* Insert Operation */
          if (count_insert_op < m_insert)
          {
@@ -243,9 +273,11 @@ void *thread_ops()
          break;
 
       case 2:
+         printf("Delete");
          /* Delete Operation */
          if (count_delete_op < m_delete)
          {
+            printf("- Delete");
             pthread_mutex_lock(&mutex);
             Delete(value, &first_node);
             count_delete_op++;
