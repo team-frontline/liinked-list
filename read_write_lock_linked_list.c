@@ -1,40 +1,32 @@
-#include<stdio.h>
-#include<stdlib.h>
+#include <stdio.h>
+#include <stdlib.h>
 #include <sys/time.h>
 #include <pthread.h>
 
 #define MAX_THREADS 1024
 #define MAX_RANDOM 65535
 
-// Number of nodes in the linked list
-int n = 0;
+int n = 0, m = 0, thread_count = 0;
 
-// Number of random operations in the linked list
-int m = 0;
-
-// Number of threads to execute
-int thread_count = 0;
-
-// Fractions of each operation
 float m_insert_frac = 0.0, m_delete_frac = 0.0, m_member_frac = 0.0;
 
-// Total number of each operation
 int m_insert = 0, m_delete = 0, m_member = 0;
 
-struct list_node_s *head = NULL;
+struct node *head = NULL;
 pthread_rwlock_t rwlock;
 
 //Node definition
-struct list_node_s {
+struct node
+{
     int data;
-    struct list_node_s *next;
+    struct node *next_node;
 };
 
-int Insert(int value, struct list_node_s **head_pp);
+int Insert(int value, struct node **head_pp);
 
-int Delete(int value, struct list_node_s **head_pp);
+int Delete(int value, struct node **head_pp);
 
-int Member(int value, struct list_node_s *head_p);
+int Member(int value, struct node *head_p);
 
 void getInput(int argc, char *argv[]);
 
@@ -42,13 +34,38 @@ double CalcTime(struct timeval time_begin, struct timeval time_end);
 
 void *Thread_Operation(void *id);
 
-int main(int argc, char *argv[]) {
+int main(int argc, char *argv[])
+{
 
-    // Obtaining the inputs
-    getInput(argc, argv);
+    //Setting input values
+    n = (int)strtol(argv[1], (char **)NULL, 10);
+    m = (int)strtol(argv[2], (char **)NULL, 10);
+    thread_count = (int)strtol(argv[3], (char **)NULL, 10);
+
+    // Setting the input values of operation fraction values
+    m_member_frac = (float)atof(argv[4]);
+    m_insert_frac = (float)atof(argv[5]);
+    m_delete_frac = (float)atof(argv[6]);
+
+    // Calculating the total number od each operation
+    m_insert = (int)(m_insert_frac * m);
+    m_delete = (int)(m_delete_frac * m);
+    m_member = (int)(m_member_frac * m);
+
+    //TODO: Validate Arguments
+
+    //validate args
+    if (m_member_frac + m_insert_frac + m_delete_frac != 1.0)
+    {
+        printf("Please give valid arguments!!");
+        exit(0); //Successful failure
+    }
+
+    //Test
+    printf("n=%d, m=%d thread_count=%d \n", n, m, thread_count);
 
     pthread_t *thread_handlers;
-    thread_handlers = (pthread_t*)malloc(sizeof(pthread_t) * thread_count);
+    thread_handlers = (pthread_t *)malloc(sizeof(pthread_t) * thread_count);
 
     // time variables
     struct timeval time_begin, time_end;
@@ -56,13 +73,10 @@ int main(int argc, char *argv[]) {
     int *thread_id;
     thread_id = (int *)malloc(sizeof(int) * thread_count);
 
-    m_insert = (int) (m_insert_frac * m);
-    m_delete = (int) (m_delete_frac * m);
-    m_member = (int) (m_member_frac * m);
-
     // Linked List Generation with Random values
     int i = 0;
-    while (i < n) {
+    while (i < n)
+    {
         if (Insert(rand() % 65535, &head) == 1)
             i++;
     }
@@ -72,15 +86,17 @@ int main(int argc, char *argv[]) {
 
     // Thread Creation
     i = 0;
-    while (i < thread_count) {
+    while (i < thread_count)
+    {
         thread_id[i] = i;
-        pthread_create(&thread_handlers[i], NULL, (void *) Thread_Operation, (void *) &thread_id[i]);
+        pthread_create(&thread_handlers[i], NULL, (void *)Thread_Operation, (void *)&thread_id[i]);
         i++;
     }
 
     // Thread Join
     i = 0;
-    while (i < thread_count) {
+    while (i < thread_count)
+    {
         pthread_join(thread_handlers[i], NULL);
         i++;
     }
@@ -92,43 +108,47 @@ int main(int argc, char *argv[]) {
     return 0;
 }
 
-
 // Linked List Membership function
-int Member(int value, struct list_node_s *head_p) {
-    struct list_node_s *current_p = head_p;
+int Member(int value, struct node *head_p)
+{
+    struct node *current_p = head_p;
 
     while (current_p != NULL && current_p->data < value)
-        current_p = current_p->next;
+        current_p = current_p->next_node;
 
-    if (current_p == NULL || current_p->data > value) {
+    if (current_p == NULL || current_p->data > value)
+    {
         return 0;
     }
-    else {
+    else
+    {
         return 1;
     }
-
 }
 
 // Linked List Insertion function
-int Insert(int value, struct list_node_s **head_pp) {
-    struct list_node_s *curr_p = *head_pp;
-    struct list_node_s *pred_p = NULL;
-    struct list_node_s *temp_p = NULL;
+int Insert(int value, struct node **head_pp)
+{
+    struct node *curr_p = *head_pp;
+    struct node *pred_p = NULL;
+    struct node *temp_p = NULL;
 
-    while (curr_p != NULL && curr_p->data < value) {
+    while (curr_p != NULL && curr_p->data < value)
+    {
         pred_p = curr_p;
-        curr_p = curr_p->next;
+        curr_p = curr_p->next_node;
     }
 
-    if (curr_p == NULL || curr_p->data > value) {
-        temp_p = malloc(sizeof(struct list_node_s));
+    if (curr_p == NULL || curr_p->data > value)
+    {
+        temp_p = malloc(sizeof(struct node));
         temp_p->data = value;
-        temp_p->next = curr_p;
+        temp_p->next_node = curr_p;
 
         if (pred_p == NULL)
             *head_pp = temp_p;
         else
-            pred_p->next = temp_p;
+            pred_p->next_node = temp_p;
 
         return 1;
     }
@@ -137,76 +157,39 @@ int Insert(int value, struct list_node_s **head_pp) {
 }
 
 // Linked List Deletion function
-int Delete(int value, struct list_node_s **head_pp) {
-    struct list_node_s *curr_p = *head_pp;
-    struct list_node_s *pred_p = NULL;
+int Delete(int value, struct node **head_pp)
+{
+    struct node *curr_p = *head_pp;
+    struct node *pred_p = NULL;
 
-    while (curr_p != NULL && curr_p->data < value) {
+    while (curr_p != NULL && curr_p->data < value)
+    {
         pred_p = curr_p;
-        curr_p = curr_p->next;
+        curr_p = curr_p->next_node;
     }
 
-    if (curr_p != NULL && curr_p->data == value) {
-        if (pred_p == NULL) {
-            *head_pp = curr_p->next;
+    if (curr_p != NULL && curr_p->data == value)
+    {
+        if (pred_p == NULL)
+        {
+            *head_pp = curr_p->next_node;
             free(curr_p);
         }
-        else {
-            pred_p->next = curr_p->next;
+        else
+        {
+            pred_p->next_node = curr_p->next_node;
             free(curr_p);
         }
 
         return 1;
-
     }
     else
         return 0;
 }
 
-// Getting the inputs
-void getInput(int argc, char *argv[]) {
-
-    // Validating the number of arguements
-    if (argc != 7) {
-        printf("Please give the command: ./serial_linked_list <n> <m> <thread_count> <mMember> <mInsert> <mDelete>\n");
-        exit(0);
-    }
-
-    // Setting the input values of n,m and thread count
-    n = (int) strtol(argv[1], (char **) NULL, 10);
-    m = (int) strtol(argv[2], (char **) NULL, 10);
-    thread_count = (int) strtol(argv[3], (char **) NULL, 10);
-
-    // Setting the input values of operation fraction values
-    m_member_frac = (float) atof(argv[4]);
-    m_insert_frac = (float) atof(argv[5]);
-    m_delete_frac = (float) atof(argv[6]);
-
-    // Validating the thread count
-    if (thread_count <= 0 || thread_count > MAX_THREADS) {
-        printf("Please give provide a valid number of threads in the range of 0 to %d\n", MAX_THREADS);
-        exit(0);
-    }
-
-    //Validating the arguments
-    if (n <= 0 || m <= 0 || m_member_frac + m_insert_frac + m_delete_frac != 1.0) {
-        printf("Please give the command with the arguements: ./serial_linked_list <n> <m> <mMember> <mInsert> <mDelete>\n");
-
-        if (n <= 0)
-            printf("Please provide a valid number of nodes for the linked list (value of n)\n");
-
-        if (m <= 0)
-            printf("Please provide a valid number of operations for the linked list (value of m)\n");
-
-        if (m_member_frac + m_insert_frac + m_delete_frac != 1.0)
-            printf("Please provide valid fractions of operations for the linked list (value of mMember, mInsert, mDelete)\n");
-
-        exit(0);
-    }
-}
-
 // Thread Operations
-void *Thread_Operation(void *thread_id) {
+void *Thread_Operation(void *thread_id)
+{
 
     int local_m = 0;
     int local_m_insert = 0;
@@ -216,26 +199,32 @@ void *Thread_Operation(void *thread_id) {
     int id = *(int *)thread_id;
 
     // Generate local no of insertion operations without loss
-    if (m_insert % thread_count == 0 || m_insert % thread_count <= id) {
+    if (m_insert % thread_count == 0 || m_insert % thread_count <= id)
+    {
         local_m_insert = m_insert / thread_count;
     }
-    else if (m_insert % thread_count > id) {
+    else if (m_insert % thread_count > id)
+    {
         local_m_insert = m_insert / thread_count + 1;
     }
 
     // Generate local no of member operations without loss
-    if (m_member % thread_count == 0 || m_member % thread_count <= id) {
+    if (m_member % thread_count == 0 || m_member % thread_count <= id)
+    {
         local_m_member = m_member / thread_count;
     }
-    else if (m_member % thread_count > id) {
+    else if (m_member % thread_count > id)
+    {
         local_m_member = m_member / thread_count + 1;
     }
 
     // Generate local no of deletion operations without loss
-    if (m_delete % thread_count == 0 || m_delete % thread_count <= id) {
+    if (m_delete % thread_count == 0 || m_delete % thread_count <= id)
+    {
         local_m_delete = m_delete / thread_count;
     }
-    else if (m_delete % thread_count > id) {
+    else if (m_delete % thread_count > id)
+    {
         local_m_delete = m_delete / thread_count + 1;
     }
 
@@ -251,42 +240,52 @@ void *Thread_Operation(void *thread_id) {
     int delete_finished = 0;
 
     int i = 0;
-    while (count_tot < local_m) {
+    while (count_tot < local_m)
+    {
 
         int random_value = rand() % MAX_RANDOM;
         int random_select = rand() % 3;
 
         // Member operation
-        if (random_select == 0 && finished_member == 0) {
-            if (count_member < local_m_member) {
+        if (random_select == 0 && finished_member == 0)
+        {
+            if (count_member < local_m_member)
+            {
                 pthread_rwlock_rdlock(&rwlock);
                 Member(random_value, head);
                 pthread_rwlock_unlock(&rwlock);
                 count_member++;
-            } else
+            }
+            else
                 finished_member = 1;
         }
 
-            // Insert Operation
-        else if (random_select == 1 && finished_insert == 0) {
-            if (count_insert < local_m_insert) {
+        // Insert Operation
+        else if (random_select == 1 && finished_insert == 0)
+        {
+            if (count_insert < local_m_insert)
+            {
                 pthread_rwlock_wrlock(&rwlock);
                 Insert(random_value, &head);
                 pthread_rwlock_unlock(&rwlock);
                 count_insert++;
-            } else
+            }
+            else
                 finished_insert = 1;
         }
 
-            // Delete Operation
-        else if (random_select == 2 && delete_finished == 0) {
+        // Delete Operation
+        else if (random_select == 2 && delete_finished == 0)
+        {
 
-            if (count_delete < local_m_delete) {
+            if (count_delete < local_m_delete)
+            {
                 pthread_rwlock_wrlock(&rwlock);
                 Delete(random_value, &head);
                 pthread_rwlock_unlock(&rwlock);
                 count_delete++;
-            } else
+            }
+            else
                 delete_finished = 1;
         }
         count_tot = count_insert + count_member + count_delete;
@@ -296,7 +295,7 @@ void *Thread_Operation(void *thread_id) {
 }
 
 // Calculating time
-double CalcTime(struct timeval time_begin, struct timeval time_end) {
-    return (double) (time_end.tv_usec - time_begin.tv_usec) / 1000000 + (double) (time_end.tv_sec - time_begin.tv_sec);
+double CalcTime(struct timeval time_begin, struct timeval time_end)
+{
+    return (double)(time_end.tv_usec - time_begin.tv_usec) / 1000000 + (double)(time_end.tv_sec - time_begin.tv_sec);
 }
-
