@@ -1,18 +1,24 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/time.h>
+#include "statistic.h"
 
 #define MAX_RANDOM 65535
+
+int number_of_times = 25;
 
 int n = 0;
 int m = 0;
 float inset_percentage, delete_percentage, member_percentage;
+double time_taken = 0;
 
 struct linked_list_node
 {
     int value;
     struct linked_list_node *next_node;
 };
+
+double serial_linked_list();
 
 int Insert(int value, struct linked_list_node **list_head);
 
@@ -26,11 +32,28 @@ double CalculateTime(struct timeval time_begin, struct timeval time_end);
 
 int main(int argc, char const *argv[])
 {
-    
+    getInputs(argc, argv);
+    double times_array[number_of_times];
+    int k = 0;
+    while (k < number_of_times)
+    {
+        time_taken = serial_linked_list();
+        times_array[k] = time_taken;
+        k++;
+    }
+
+    printf("Mean execution time for %i number of exectuions: %f", number_of_times, calculate_mean(times_array, number_of_times));
+    printf("\nStandard deviation for %i number of exectuions: %f", number_of_times, calculate_std(times_array, number_of_times));
+    printf("\nSample size for accuracy of ±5 and 95 confidence level: %f", sample_size(times_array, number_of_times, 1.96, 5));
+
+    return 0;
+}
+
+double serial_linked_list()
+{
     struct linked_list_node *head = NULL;
     struct timeval time_begin, time_end;
 
-    getInputs(argc, argv);
     int i = 0;
     while (i < n)
     {
@@ -74,8 +97,9 @@ int main(int argc, char const *argv[])
     }
     gettimeofday(&time_end, NULL);
     printf("Serial Linked List Time Spent : %.6f secs\n", CalculateTime(time_begin, time_end));
+    free(head);
 
-    return 0;
+    return CalculateTime(time_begin, time_end);
 }
 
 int Insert(int value, struct linked_list_node **list_head)
